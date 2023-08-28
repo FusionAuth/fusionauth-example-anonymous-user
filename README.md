@@ -1,10 +1,12 @@
-# Example Flask Application 
+# Example Anonymous User Application
 
-This repo holds an example Python/Flask application that uses FusionAuth as the identity provider. 
-This application will use an OAuth Authorization Code Grant workflow to log a user in and get them access and 
-refresh tokens.
+This application builds on the [FusionAuth Flask Quickstart](https://fusionauth.io/docs/quickstarts/quickstart-python-flask-web).
 
-This application was built by following the [Python/Flask Quickstart](https://fusionauth.io/docs/quickstarts/quickstart-python-flask-web).
+It has additional pages:
+
+* A page showing the Changebank video. A user who views this page will have an anonymous, shadow user account created for them in FusionAuth. This account will record the number of times this page is visited. This anonymous account will not be visible to the user.
+* An account conversion page, where a user can create an account by providing an email address. If they have an anonymous account, the data in that account will be carried over to the full account.
+* A webhook receiver, which will, upon email verification, update the user's `data` field to reflect account conversion.
 
 ## Project Contents
 
