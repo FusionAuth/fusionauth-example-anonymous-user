@@ -2,7 +2,8 @@
     "variables": {
         "applicationId": "E9FDB985-9173-4E01-9D73-AC2D60D1DC8E",
         "apiKey": "this_really_should_be_a_long_random_alphanumeric_value_but_this_still_works",
-        "asymmetricKeyId": "#{UUID()}",
+        "limitedApiKey": "my_limited_api_key",
+        "asymmetricKeyId": "1ae9da3f-fdd4-45af-b605-5d8be94320e1",
         "newThemeId": "#{UUID()}",
         "defaultTenantId": "d7d09513-a3f5-401c-9685-34ab6c552453",
         "adminEmail": "admin@example.com",
@@ -15,6 +16,25 @@
         {
             "key": "#{apiKey}",
             "description": "Unrestricted API key"
+        },
+        {
+            "key": "#{limitedApiKey}",
+            "description": "Limited API key",
+                "permissions": {
+                  "endpoints": {
+                    "/api/jwt/vend": [
+                      "POST"
+                    ],
+                    "/api/user": [
+                      "GET",
+                      "POST",
+                      "PATCH"
+                    ],
+                    "/api/user/forgot-password": [
+                      "POST"
+                    ]
+                  }
+             }
         }
     ],
     "requests": [

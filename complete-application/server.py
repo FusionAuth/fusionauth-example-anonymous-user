@@ -4,12 +4,18 @@ import math
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
 from authlib.integrations.flask_client import OAuth
+from authlib.jose import jwt as jwt_decoder
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, redirect, render_template, session, url_for, request, make_response
+from fusionauth.fusionauth_client import FusionAuthClient
+import random
+import string
+import urllib.request
 
 ACCESS_TOKEN_COOKIE_NAME = "cb_access_token"
 REFRESH_TOKEN_COOKIE_NAME = "cb_refresh_token"
 USERINFO_COOKIE_NAME = "cb_userinfo"
+ANON_JWT_COOKIE_NAME = "cb_anon_user"
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -31,6 +37,10 @@ oauth.register(
   server_metadata_url=f'{env.get("ISSUER")}/.well-known/openid-configuration'
 )
 
+jwks_url=f'{env.get("ISSUER")}/.well-known/jwks.json'
+
+client = FusionAuthClient(env.get("API_KEY"), 'http://localhost:9011')
+
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=env.get("PORT", 5000))
 
@@ -48,6 +58,56 @@ def home():
   return render_template("home.html")
 #end::homeRoute[]
 
+@app.route("/video")
+def video():
+  if request.cookies.get(ANON_JWT_COOKIE_NAME, None) is None:
+    # create an anonymous user, set view count to 1
+    new_user={
+      'user': {
+        'username': random_string(64),
+        'password': random_string(64),
+        'data': {
+          'watchCount':1,
+          'anonymousUser':True
+        }
+      }
+    }
+
+    response = client.create_user(new_user).success_response
+    user_id=response['user']['id']
+    # create a JWT, good for a year
+    jwt_ttl=60*60*24*365
+    jwt={
+      'claims': {
+        'userId': user_id
+      },
+      'keyId': env.get("SIGNING_KEY_ID"),
+      'timeToLiveInSeconds': jwt_ttl
+    }
+    response = client.vend_jwt(jwt).success_response
+    token=response['token']
+    resp = make_response(render_template("video.html"))
+
+    # set the cookie
+    resp.set_cookie(ANON_JWT_COOKIE_NAME, token, max_age=jwt_ttl, httponly=True, samesite="Lax")
+    return resp
+  else:
+    user_id = get_anon_user_id_from_cookie()
+
+    # retrieve the user by id
+    user = client.retrieve_user(user_id).success_response
+    current_count = user['user']['data']['watchCount']
+    new_count = current_count + 1
+    # increment watchCount using patch
+    patch_data = {
+      'user': {
+        'data': {
+          'watchCount':new_count
+        }
+      }
+    }
+    patch_response = client.patch_user(user_id, patch_data).success_response
+    return render_template("video.html")
 
 #tag::loginRoute[]
 @app.route("/login")
@@ -146,3 +206,18 @@ def make_change():
     change=change,
     logoutUrl=get_logout_url())
 #end::makeChangeRoute[]
+
+# from https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
+def random_string(length):
+  return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
+
+def get_anon_user_id_from_cookie():
+  # get the cookie
+  anon_jwt = request.cookies.get(ANON_JWT_COOKIE_NAME, None)
+  jwks = ''
+  with urllib.request.urlopen(jwks_url) as response:
+    jwks = response.read().decode("utf-8") 
+  print(jwks)
+  claims = jwt_decoder.decode(anon_jwt, key=jwks)
+  return claims['userId']
+
