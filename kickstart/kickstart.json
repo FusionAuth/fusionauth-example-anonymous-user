@@ -168,9 +168,11 @@
           "url": "/api/webhook/#{emailVerifiedWebhookId}",
           "body": {
             "webhook": {
+              "connectTimeout" : 2000,
               "eventsEnabled": {
-                "user.email.verified": "true"
+                "user.email.update": "true"
               },
+              "readTimeout" : 2000,
               "tenantIds": [ 
                 "#{defaultTenantId}"
               ],
@@ -188,7 +190,27 @@
                       "host": "mailcatcher",
                       "port": "1025",
                       "forgotPasswordEmailTemplateId": "#{forgotPasswordEmailTemplateId}"
-                    }
+                    },
+                    "eventConfiguration" : {
+                      "events" : { 
+                        "user.email.update" : {
+                          "enabled": true,
+                          "transactionType": "None"
+                        }
+                      }
+                    },
+                    "webhookIds" : [ "#{emailVerifiedWebhookId}" ]
+                } 
+            }
+        },
+        {
+            "method": "PATCH",
+            "url": "/api/webhook/#{emailVerifiedWebhookId}",
+            "body": {
+                "webhook": {
+                  "tenantIds": [ 
+                    "#{defaultTenantId}"
+                  ]
                 } 
             }
         }
