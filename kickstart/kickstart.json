@@ -169,10 +169,10 @@
           "body": {
             "webhook": {
               "eventsEnabled": {
-                "user.email.verified", "true"
+                "user.email.verified": "true"
               },
               "tenantIds": [ 
-                #{defaultTenantId}
+                "#{defaultTenantId}"
               ],
               "url" : "http://host.docker.internal:5000/webhook"
             }
@@ -187,7 +187,7 @@
                     "emailConfiguration": {
                       "host": "mailcatcher",
                       "port": "1025",
-                      "forgotPasswordEmailTemplateId": #{forgotPasswordEmailTemplateId}
+                      "forgotPasswordEmailTemplateId": "#{forgotPasswordEmailTemplateId}"
                     }
                 } 
             }
