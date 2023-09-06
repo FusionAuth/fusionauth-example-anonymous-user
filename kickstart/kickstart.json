@@ -4,6 +4,8 @@
         "apiKey": "this_really_should_be_a_long_random_alphanumeric_value_but_this_still_works",
         "limitedApiKey": "my_limited_api_key",
         "asymmetricKeyId": "1ae9da3f-fdd4-45af-b605-5d8be94320e1",
+        "forgotPasswordEmailTemplateId": "#{UUID()}",
+        "emailVerifiedWebhookId": "#{UUID()}",
         "newThemeId": "#{UUID()}",
         "defaultTenantId": "d7d09513-a3f5-401c-9685-34ab6c552453",
         "adminEmail": "admin@example.com",
@@ -149,11 +151,44 @@
             }
         },
         {
+          "method": "POST",
+          "url": "/api/email/template/#{forgotPasswordEmailTemplateId}",
+          "body": {
+            "emailTemplate": {
+              "defaultFromName": "FusionAuth Development",
+              "defaultSubject": "Set your password",
+              "defaultHtmlTemplate": "@{email-templates/forgot-password.html.ftl}",
+              "defaultTextTemplate": "@{email-templates/forgot-password.txt.ftl}",
+              "name": "Forgot Password"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "url": "/api/webhook/#{emailVerifiedWebhookId}",
+          "body": {
+            "webhook": {
+              "eventsEnabled": {
+                "user.email.verified", "true"
+              },
+              "tenantIds": [ 
+                #{defaultTenantId}
+              ],
+              "url" : "http://host.docker.internal:5000/webhook"
+            }
+          }
+        },
+        {
             "method": "PATCH",
             "url": "/api/tenant/#{defaultTenantId}",
             "body": {
                 "tenant": {
-                    "themeId": "#{newThemeId}"
+                    "themeId": "#{newThemeId}",
+                    "emailConfiguration": {
+                      "host": "mailcatcher",
+                      "port": "1025",
+                      "forgotPasswordEmailTemplateId": #{forgotPasswordEmailTemplateId}
+                    }
                 } 
             }
         }

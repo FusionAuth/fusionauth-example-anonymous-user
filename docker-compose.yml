@@ -63,6 +63,7 @@ services:
     networks:
       - db_net
       - search_net
+      - mailcatcher_net
     restart: unless-stopped
     ports:
       - 9011:9011
@@ -70,10 +71,20 @@ services:
       - fusionauth_config:/usr/local/fusionauth/config
       - ./kickstart:/usr/local/fusionauth/kickstart
 
+  mailcatcher:
+    image: schickling/mailcatcher
+    ports:
+      - "1025:1025"
+      - "1080:1080"
+    networks:
+      - mailcatcher_net
+
 networks:
   db_net:
     driver: bridge
   search_net:
+    driver: bridge
+  mailcatcher_net:
     driver: bridge
 
 volumes:

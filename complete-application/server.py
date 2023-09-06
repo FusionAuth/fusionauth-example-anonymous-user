@@ -58,6 +58,65 @@ def home():
   return render_template("home.html")
 #end::homeRoute[]
 
+@app.route("/register", methods=['GET', 'POST'])
+def register():
+  message = {}
+  # if they have no cookie, send them to the registration page 
+  if request.cookies.get(ANON_JWT_COOKIE_NAME, None) is None:
+    # redirect them to the normal registration page
+    redirect_uri=url_for("callback", _external=True)
+    authorize_url_obj = oauth.FusionAuth.create_authorization_url(
+      redirect_uri=redirect_uri
+    )
+    authorize_url = authorize_url_obj['url']
+    state = authorize_url_obj['state']
+
+    # depends on the fact that register is always the same as authorize, except the last path param
+    register_url = authorize_url.replace('/oauth2/authorize','/oauth2/register')
+
+    # from https://github.com/lepture/authlib/blob/master/authlib/integrations/flask_client/apps.py#L36 just mimic what the redirect would have done
+    oauth.FusionAuth.save_authorize_data(redirect_uri=redirect_uri, **authorize_url_obj)
+    print(register_url)
+    return redirect(register_url)
+  else: 
+  # if they have a cookie, look up the user and convert them and send a password reset
+    if request.method == 'POST':
+      user_id = get_anon_user_id_from_cookie()
+      
+      user = client.retrieve_user(user_id).success_response
+      # correct the email address using patch
+
+      email_param = request.form["email"]
+      print(email_param)
+     
+      message["message"] = "Please check your email to set your password."
+      patch_data = {
+        'user': {
+          'email': email_param
+        }
+      }
+      patch_response = client.patch_user(user_id, patch_data).success_response
+      forgot_password_data = {
+        'loginId': email_param
+      }
+      trigger_email_response = client.forgot_password(forgot_password_data).success_response
+      
+
+    return render_template("register.html", message=message)
+
+@app.route("/webhook", methods=['POST'])
+def webhook():
+  # look up the user by id. If they are not an anonymous user return 204 directly, otherwise update their anonymous user status to be false and return 204
+  # looking for email verified event https://fusionauth.io/docs/v1/tech/events-webhooks/events/user-email-verified
+  if request.method == 'POST':
+    print("Data received from Webhook is: ", request.json)
+    return "Webhook received!"
+  return '', 204
+
+#TODO add webhook which removes anonymousUser
+#TODO then figure out the login component (maybe hide self service registration from the template, instead pushing users to the flask app, or just point to the flask register route for all users?
+#TODO then update the doc (maybe split into diff 
+
 @app.route("/video")
 def video():
   if request.cookies.get(ANON_JWT_COOKIE_NAME, None) is None:
@@ -121,6 +180,8 @@ def login():
 #tag::callbackRoute[]
 @app.route("/callback")
 def callback():
+  print('sess')
+  print(session)
   token = oauth.FusionAuth.authorize_access_token()
 
   resp = make_response(redirect("/"))
@@ -217,7 +278,6 @@ def get_anon_user_id_from_cookie():
   jwks = ''
   with urllib.request.urlopen(jwks_url) as response:
     jwks = response.read().decode("utf-8") 
-  print(jwks)
   claims = jwt_decoder.decode(anon_jwt, key=jwks)
   return claims['userId']
 
