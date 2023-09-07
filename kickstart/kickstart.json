@@ -5,7 +5,7 @@
         "limitedApiKey": "my_limited_api_key",
         "asymmetricKeyId": "1ae9da3f-fdd4-45af-b605-5d8be94320e1",
         "forgotPasswordEmailTemplateId": "#{UUID()}",
-        "emailVerifiedWebhookId": "#{UUID()}",
+        "userLoginSuccessWebhookId": "#{UUID()}",
         "newThemeId": "#{UUID()}",
         "defaultTenantId": "d7d09513-a3f5-401c-9685-34ab6c552453",
         "adminEmail": "admin@example.com",
@@ -137,7 +137,7 @@
             "body": {
                 "sourceThemeId": "75a068fd-e94b-451a-9aeb-3ddb9a3b5987",
                 "theme": {
-                    "name": "React theme"
+                    "name": "My theme"
                 } 
             }
         },
@@ -146,7 +146,11 @@
             "url": "/api/theme/#{newThemeId}",
             "body": {
                 "theme": {
-                    "stylesheet": "@{css/styles.css}"
+                    "stylesheet": "@{css/styles.css}",
+                    "templates": {
+                      "passwordComplete": "@{templates/passwordComplete.ftl}",
+                      "oauth2Authorize": "@{templates/oauth2Authorize.ftl}"
+                    }
                 } 
             }
         },
@@ -165,12 +169,12 @@
         },
         {
           "method": "POST",
-          "url": "/api/webhook/#{emailVerifiedWebhookId}",
+          "url": "/api/webhook/#{userLoginSuccessWebhookId}",
           "body": {
             "webhook": {
               "connectTimeout" : 2000,
               "eventsEnabled": {
-                "user.email.update": "true"
+                "user.login.success": "true"
               },
               "readTimeout" : 2000,
               "tenantIds": [ 
@@ -193,19 +197,19 @@
                     },
                     "eventConfiguration" : {
                       "events" : { 
-                        "user.email.update" : {
+                        "user.login.success" : {
                           "enabled": true,
                           "transactionType": "None"
                         }
                       }
                     },
-                    "webhookIds" : [ "#{emailVerifiedWebhookId}" ]
+                    "webhookIds" : [ "#{userLoginSuccessWebhookId}" ]
                 } 
             }
         },
         {
             "method": "PATCH",
-            "url": "/api/webhook/#{emailVerifiedWebhookId}",
+            "url": "/api/webhook/#{userLoginSuccessWebhookId}",
             "body": {
                 "webhook": {
                   "tenantIds": [ 
