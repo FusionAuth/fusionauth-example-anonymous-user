@@ -82,40 +82,63 @@ def register():
   # if they have a cookie, look up the user and convert them and send a password reset
     if request.method == 'POST':
       user_id = get_anon_user_id_from_cookie()
+      if user_id is None:
+        print("couldn't find user")
+        message["message"] = "Couldn't find your user id."
+        return render_template("register.html", message=message)
       
-      user = client.retrieve_user(user_id).success_response
-      # correct the email address using patch
-
+      # correct the email address using patch if the email doesn't already exist
       email_param = request.form["email"]
-      print(email_param)
+      #print(email_param)
      
+      user = client.retrieve_user_by_email(email_param).success_response
       message["message"] = "Please check your email to set your password."
-      patch_data = {
-        'user': {
-          'email': email_param
-        }
-      }
-      patch_response = client.patch_user(user_id, patch_data).success_response
-      forgot_password_data = {
-        'loginId': email_param
-      }
-      trigger_email_response = client.forgot_password(forgot_password_data).success_response
-      
 
+      # if we already have the user in our system, fail silently. depending on your use case, you may want to sent the forgot password email, or display an error message
+      print(user)
+      if user is None:
+        patch_data = {
+          'user': {
+            'email': email_param
+          }
+        }
+        patch_response = client.patch_user(user_id, patch_data).success_response
+
+        forgot_password_data = {
+          'loginId': email_param,
+          'state': { 'anon_user': 'true' }
+        }
+        print("send forgot password")
+        trigger_email_response = client.forgot_password(forgot_password_data)
+        
+        print(trigger_email_response)
+        print(trigger_email_response.success_response)
+        print(trigger_email_response.error_response)
+      
     return render_template("register.html", message=message)
 
 @app.route("/webhook", methods=['POST'])
 def webhook():
   # look up the user by id. If they are not an anonymous user return 204 directly, otherwise update their anonymous user status to be false and return 204
-  # looking for email verified event https://fusionauth.io/docs/v1/tech/events-webhooks/events/user-email-verified
+  # looking for email user login event because email verified is only fired on explicit email verification
   if request.method == 'POST':
-    print("Data received from Webhook is: ", request.json)
-    return "Webhook received!"
-  return '', 204
+    #print("Data received from Webhook is: ", request.json)
+    webhookjson = request.json
+    event_type = webhookjson['event']['type']
+    is_anon_user = webhookjson['event']['user'] and webhookjson['event']['user']['data'] and webhookjson['event']['user']['data']['anonymousUser']
+    if event_type == 'user.login.success' and is_anon_user:
+      user_id = webhookjson['event']['user']['id']
+      patch_data = {
+        'user': {
+          'username': '',
+          'data' : {
+            'anonymousUser':False
+          }
+        }
+      }
+      patch_response = client.patch_user(user_id, patch_data).success_response
 
-#TODO add webhook which removes anonymousUser
-#TODO then figure out the login component (maybe hide self service registration from the template, instead pushing users to the flask app, or just point to the flask register route for all users?
-#TODO then update the doc (maybe split into diff 
+  return '', 204
 
 @app.route("/video")
 def video():
@@ -152,6 +175,9 @@ def video():
     return resp
   else:
     user_id = get_anon_user_id_from_cookie()
+    if user_id is None:
+      print("couldn't find user")
+      return render_template("video.html")
 
     # retrieve the user by id
     user = client.retrieve_user(user_id).success_response
@@ -180,8 +206,6 @@ def login():
 #tag::callbackRoute[]
 @app.route("/callback")
 def callback():
-  print('sess')
-  print(session)
   token = oauth.FusionAuth.authorize_access_token()
 
   resp = make_response(redirect("/"))
@@ -189,6 +213,9 @@ def callback():
   resp.set_cookie(ACCESS_TOKEN_COOKIE_NAME, token["access_token"], max_age=token["expires_in"], httponly=True, samesite="Lax")
   resp.set_cookie(REFRESH_TOKEN_COOKIE_NAME, token["refresh_token"], max_age=token["expires_in"], httponly=True, samesite="Lax")
   resp.set_cookie(USERINFO_COOKIE_NAME, json.dumps(token["userinfo"]), max_age=token["expires_in"], httponly=False, samesite="Lax")
+
+  # you've successfully logged in, so you must have a password, so we can delete your anon identifier
+  resp.delete_cookie(ANON_JWT_COOKIE_NAME)
   session["user"] = token["userinfo"]
 
   return resp
@@ -278,6 +305,11 @@ def get_anon_user_id_from_cookie():
   jwks = ''
   with urllib.request.urlopen(jwks_url) as response:
     jwks = response.read().decode("utf-8") 
-  claims = jwt_decoder.decode(anon_jwt, key=jwks)
+  try:
+    claims = jwt_decoder.decode(anon_jwt, key=jwks)
+  except ValueError:
+    print("couldn't get claims")
+    return None
+
   return claims['userId']
 
