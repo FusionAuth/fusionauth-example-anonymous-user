@@ -314,7 +314,7 @@ def make_change():
 def random_string(length):
   return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
 
-# tag::getAnonUserIdFromCookie []
+# tag::getAnonUserIdFromCookie[]
 def get_anon_user_id_from_cookie():
   # get the cookie
   anon_jwt = request.cookies.get(ANON_JWT_COOKIE_NAME, None)
@@ -328,5 +328,5 @@ def get_anon_user_id_from_cookie():
     return None
 
   return claims['userId']
-# end::getAnonUserIdFromCookie []
+# end::getAnonUserIdFromCookie[]
 
