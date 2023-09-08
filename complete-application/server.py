@@ -39,7 +39,9 @@ oauth.register(
 
 jwks_url=f'{env.get("ISSUER")}/.well-known/jwks.json'
 
+# tag::createFusionAuthClient[]
 client = FusionAuthClient(env.get("API_KEY"), 'http://localhost:9011')
+# end::createFusionAuthClient[]
 
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=env.get("PORT", 5000))
