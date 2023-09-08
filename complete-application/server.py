@@ -60,6 +60,7 @@ def home():
   return render_template("home.html")
 #end::homeRoute[]
 
+#tag::registerRoute[]
 @app.route("/register", methods=['GET', 'POST'])
 def register():
   message = {}
@@ -81,6 +82,7 @@ def register():
     print(register_url)
     return redirect(register_url)
   else: 
+#tag::registerAnonymousUserRoute[]
   # if they have a cookie, look up the user and convert them and send a password reset
     if request.method == 'POST':
       user_id = get_anon_user_id_from_cookie()
@@ -116,6 +118,7 @@ def register():
         print(trigger_email_response)
         print(trigger_email_response.success_response)
         print(trigger_email_response.error_response)
+#end::registerAnonymousUserRoute[]
       
     return render_template("register.html", message=message)
 
@@ -309,6 +312,7 @@ def make_change():
 def random_string(length):
   return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
 
+# tag::getAnonUserIdFromCookie []
 def get_anon_user_id_from_cookie():
   # get the cookie
   anon_jwt = request.cookies.get(ANON_JWT_COOKIE_NAME, None)
@@ -322,4 +326,5 @@ def get_anon_user_id_from_cookie():
     return None
 
   return claims['userId']
+# end::getAnonUserIdFromCookie []
 
