@@ -181,6 +181,7 @@ def video():
 # end::createJWT[]
     return resp
   else:
+# tag::readJWT[]
     user_id = get_anon_user_id_from_cookie()
     if user_id is None:
       print("couldn't find user")
@@ -199,6 +200,7 @@ def video():
       }
     }
     patch_response = client.patch_user(user_id, patch_data).success_response
+# end::readJWT[]
     return render_template("video.html")
 # end::videoRoute[]
 
