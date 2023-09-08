@@ -142,6 +142,8 @@ def webhook():
 
   return '', 204
 
+# tag::videoRoute[]
+# tag::createUser[]
 @app.route("/video")
 def video():
   if request.cookies.get(ANON_JWT_COOKIE_NAME, None) is None:
@@ -159,6 +161,8 @@ def video():
 
     response = client.create_user(new_user).success_response
     user_id=response['user']['id']
+# end::createUser[]
+# tag::createJWT[]
     # create a JWT, good for a year
     jwt_ttl=60*60*24*365
     jwt={
@@ -174,6 +178,7 @@ def video():
 
     # set the cookie
     resp.set_cookie(ANON_JWT_COOKIE_NAME, token, max_age=jwt_ttl, httponly=True, samesite="Lax")
+# end::createJWT[]
     return resp
   else:
     user_id = get_anon_user_id_from_cookie()
@@ -195,6 +200,7 @@ def video():
     }
     patch_response = client.patch_user(user_id, patch_data).success_response
     return render_template("video.html")
+# end::videoRoute[]
 
 #tag::loginRoute[]
 @app.route("/login")
