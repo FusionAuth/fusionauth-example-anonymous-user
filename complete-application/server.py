@@ -79,7 +79,6 @@ def register():
 
     # from https://github.com/lepture/authlib/blob/master/authlib/integrations/flask_client/apps.py#L36 just mimic what the redirect would have done
     oauth.FusionAuth.save_authorize_data(redirect_uri=redirect_uri, **authorize_url_obj)
-    print(register_url)
     return redirect(register_url)
   else: 
 #tag::registerAnonymousUserRoute[]
@@ -93,13 +92,11 @@ def register():
       
       # correct the email address using patch if the email doesn't already exist
       email_param = request.form["email"]
-      #print(email_param)
      
       user = client.retrieve_user_by_email(email_param).success_response
       message["message"] = "Please check your email to set your password."
 
       # if we already have the user in our system, fail silently. depending on your use case, you may want to sent the forgot password email, or display an error message
-      print(user)
       if user is None:
         patch_data = {
           'user': {
@@ -112,12 +109,8 @@ def register():
           'loginId': email_param,
           'state': { 'anon_user': 'true' }
         }
-        print("send forgot password")
         trigger_email_response = client.forgot_password(forgot_password_data)
-        
-        print(trigger_email_response)
-        print(trigger_email_response.success_response)
-        print(trigger_email_response.error_response)
+
 #end::registerAnonymousUserRoute[]
       
     return render_template("register.html", message=message)
@@ -128,7 +121,6 @@ def webhook():
   # look up the user by id. If they are not an anonymous user return 204 directly, otherwise update their anonymous user status to be false and return 204
   # looking for email user login event because email verified is only fired on explicit email verification
   if request.method == 'POST':
-    #print("Data received from Webhook is: ", request.json)
     webhookjson = request.json
     event_type = webhookjson['event']['type']
     is_anon_user = webhookjson['event']['user'] and webhookjson['event']['user']['data'] and webhookjson['event']['user']['data']['anonymousUser']
