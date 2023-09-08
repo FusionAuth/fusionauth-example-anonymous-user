@@ -122,6 +122,7 @@ def register():
       
     return render_template("register.html", message=message)
 
+#tag::cleanupAnonymousUserRoute[]
 @app.route("/webhook", methods=['POST'])
 def webhook():
   # look up the user by id. If they are not an anonymous user return 204 directly, otherwise update their anonymous user status to be false and return 204
@@ -144,6 +145,7 @@ def webhook():
       patch_response = client.patch_user(user_id, patch_data).success_response
 
   return '', 204
+#end::cleanupAnonymousUserRoute[]
 
 # tag::videoRoute[]
 # tag::createUser[]
