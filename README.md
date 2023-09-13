@@ -19,10 +19,10 @@ The `/complete-application` directory contains a fully working version of the ap
 * Python 3.8 or later, for running the Changebank Python application
 
 ## Running FusionAuth
-To run FusionAuth, just stand up the docker containers using `docker-compose`.
+To run FusionAuth, just stand up the docker containers using `docker compose`.
 
 ```shell
-docker-compose up
+docker compose up
 ```
 
 This will start a PostgreSQL database, and Elastic service, and the FusionAuth server.
