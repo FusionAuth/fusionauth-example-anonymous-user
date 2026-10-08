@@ -1,5 +1,8 @@
 # Example Anonymous User Application
 
+> [!WARNING]
+> This repository is generated from content that lives at [github.com/FusionAuth/fusionauth-site](https://github.com/FusionAuth/fusionauth-site/tree/main/astro/extractedcode/example-anonymous-user). Changes to files here _will be overwritten by that automation_. File an issue or pull request with [fusionauth-site](https://github.com/FusionAuth/fusionauth-site) instead.
+
 This application builds on the [FusionAuth Flask Quickstart](https://fusionauth.io/docs/quickstarts/quickstart-python-flask-web).
 
 It has additional pages:
@@ -53,7 +56,7 @@ If you're going to be working on the application and want hot reloads of the ser
 flask --app server.py --debug run
 ```
 
-Visit the local webserver at `http://localhost:5000/` and sign in using the credentials:
+Visit the local webserver at `http://localhost:9012/` and sign in using the credentials:
 
 * username: richard@example.com
 * password: password

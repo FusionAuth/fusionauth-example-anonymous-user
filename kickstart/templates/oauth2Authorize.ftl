@@ -104,7 +104,7 @@
       [#if application.registrationConfiguration.enabled]
         <div class="form-row push-top">
           ${theme.message('dont-have-an-account')}
-          [@helpers.link url="http://localhost:5000/register"]${theme.message('create-an-account')}[/@helpers.link]
+          [@helpers.link url="http://localhost:9012/register"]${theme.message('create-an-account')}[/@helpers.link]
         </div>
       [/#if]
 

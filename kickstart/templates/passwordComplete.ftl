@@ -18,7 +18,7 @@
     [@helpers.main title=theme.message('password-changed-title')]
       <p>
         ${theme.message('password-changed')}
-        <a href="https://localhost:5000/login">Login here</a>
+        <a href="http://localhost:9012/login">Login here</a>
       </p>
     [/@helpers.main]
 

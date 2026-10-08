@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db:
     image: postgres:16.0-bookworm
@@ -82,6 +80,9 @@ services:
       FUSIONAUTH_APP_KICKSTART_FILE: ${FUSIONAUTH_APP_KICKSTART_FILE}
       FUSIONAUTH_APP_INSTALLATION_SOURCE: fusionauth-example-anonymous-user
 
+    # lets the webhook reach the app on the host; Docker Desktop provides this name, Linux needs the mapping
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - db_net
       - search_net
